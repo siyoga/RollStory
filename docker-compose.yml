@@ -17,11 +17,11 @@ services:
     build:
       args:
         - module=bot
-        - env=dev
+        - env=${ENV}
       context: .
       dockerfile: Dockerfile
-    environment:
-      LOG_PATH: /logs/bot.log
+    env_file:
+      - .env
     volumes:
       - ./logs:/logs
 
@@ -35,6 +35,6 @@ services:
       - .env
     command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASS}
     ports:
-      - '6379:6379'
+      - "6379:6379"
     volumes:
       - redis:/data

@@ -1,11 +1,10 @@
-package handler
+package router
 
 import (
 	"context"
 
 	"github.com/siyoga/rollstory/internal/config"
 	"github.com/siyoga/rollstory/internal/domain"
-	"github.com/siyoga/rollstory/internal/handler/router"
 	"github.com/siyoga/rollstory/internal/service"
 )
 
@@ -19,34 +18,30 @@ type (
 func NewContextHandler(
 	timeouts config.Timeouts,
 	ctxService service.ContextService,
-	router router.Router,
 ) Handler {
-	c := contextHandler{
-		service: ctxService,
+	return &contextHandler{
+		timeouts: timeouts,
+		service:  ctxService,
 	}
-
-	c.fillHandlers(router)
-
-	return &c
 }
 
-func (c *contextHandler) fillHandlers(r router.Router) {
+func (c *contextHandler) FillHandlers(r Router) {
 	r.Handle("start", c.start)
 	r.Handle("character", c.character)
 	r.Handle("world", c.world)
 }
 
-func (c *contextHandler) start(ctx context.Context, userId int64, msg *domain.Message) router.Response {
+func (c *contextHandler) start(ctx context.Context, userId int64, msg *domain.Message) response {
 	var cancel func()
 	ctx, cancel = context.WithTimeout(ctx, c.timeouts.RequestTimeout)
 	defer cancel()
 
 	res, e := c.service.CreateThreadAndSendInstruction(ctx, userId)
 	if e != nil {
-		return router.NewErrResponse(e, userId)
+		return newErrResponse(e, userId)
 	}
 
-	return router.NewSuccessResponse(
+	return newSuccessResponse(
 		domain.MessageResult{
 			Message: res,
 			ChatId:  msg.Chat.ID,
@@ -56,13 +51,13 @@ func (c *contextHandler) start(ctx context.Context, userId int64, msg *domain.Me
 	)
 }
 
-func (c *contextHandler) character(ctx context.Context, userId int64, msg *domain.Message) router.Response {
+func (c *contextHandler) character(ctx context.Context, userId int64, msg *domain.Message) response {
 	var cancel func()
 	ctx, cancel = context.WithTimeout(ctx, c.timeouts.RequestTimeout)
 	defer cancel()
 
 	if msg.IsCommand() {
-		return router.NewSuccessResponse(
+		return newSuccessResponse(
 			domain.MessageResult{
 				Message: "Отправьте описание вашего персонажа, желательно чтобы в нем было: \n" +
 					"1. Внешность\n" +
@@ -77,10 +72,10 @@ func (c *contextHandler) character(ctx context.Context, userId int64, msg *domai
 
 	res, e := c.service.CreateCharacter(ctx, userId, msg.Text)
 	if e != nil {
-		return router.NewErrResponse(e, userId)
+		return newErrResponse(e, userId)
 	}
 
-	return router.NewSuccessResponse(
+	return newSuccessResponse(
 		domain.MessageResult{
 			Message: res,
 			ChatId:  msg.Chat.ID,
@@ -90,13 +85,13 @@ func (c *contextHandler) character(ctx context.Context, userId int64, msg *domai
 	)
 }
 
-func (c *contextHandler) world(ctx context.Context, userId int64, msg *domain.Message) router.Response {
+func (c *contextHandler) world(ctx context.Context, userId int64, msg *domain.Message) response {
 	var cancel func()
 	ctx, cancel = context.WithTimeout(ctx, c.timeouts.RequestTimeout)
 	defer cancel()
 
 	if msg.IsCommand() {
-		return router.NewSuccessResponse(
+		return newSuccessResponse(
 			domain.MessageResult{
 				Message: "Отправьте жанр вселенной в которой хотите играть," +
 					" чем подробнее будет описаниее, тем лучше будет ваш игровой опыт",
@@ -109,10 +104,10 @@ func (c *contextHandler) world(ctx context.Context, userId int64, msg *domain.Me
 
 	res, e := c.service.CreateWorld(ctx, userId, msg.Text)
 	if e != nil {
-		return router.NewErrResponse(e, userId)
+		return newErrResponse(e, userId)
 	}
 
-	return router.NewSuccessResponse(
+	return newSuccessResponse(
 		domain.MessageResult{
 			Message: res,
 			ChatId:  msg.Chat.ID,

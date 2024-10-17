@@ -17,6 +17,10 @@ type (
 		Stop()
 	}
 
+	Handler interface {
+		FillHandlers(r Router)
+	}
+
 	router struct {
 		debug     bool
 		offset    int
@@ -30,14 +34,21 @@ type (
 
 		adpt adapter.TelegramAdapter
 
+		ctxHandler  Handler
+		gameHandler Handler
+
 		logger logger.Logger
 	}
 )
 
 func New(
 	cfg config.Bot,
-	adapter adapter.TelegramAdapter,
 	logger logger.Logger,
+
+	adapter adapter.TelegramAdapter,
+
+	ctxHandler Handler,
+	gameHandler Handler,
 ) Router {
 	return &router{
 		debug:     cfg.Debug,
@@ -50,6 +61,9 @@ func New(
 		routesExec:   make(map[int64]*Route),
 
 		adpt: adapter,
+
+		ctxHandler:  ctxHandler,
+		gameHandler: gameHandler,
 
 		logger: logger,
 	}
@@ -78,6 +92,8 @@ func (r *router) DefaultHandle(handler cmdHandler) *Route {
 }
 
 func (r *router) Run() {
+	r.initRoutes()
+
 	if r.defaultRoute == nil {
 		r.logger.Panic("Please, provide default route", errors.ErrRouterNoDefaultRoute)
 	}

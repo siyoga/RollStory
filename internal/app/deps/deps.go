@@ -8,10 +8,9 @@ import (
 	"github.com/siyoga/rollstory/internal/adapter"
 	"github.com/siyoga/rollstory/internal/app/db"
 	"github.com/siyoga/rollstory/internal/config"
-	"github.com/siyoga/rollstory/internal/handler"
-	"github.com/siyoga/rollstory/internal/handler/router"
 	"github.com/siyoga/rollstory/internal/logger"
 	"github.com/siyoga/rollstory/internal/repository"
+	"github.com/siyoga/rollstory/internal/router"
 	"github.com/siyoga/rollstory/internal/service"
 
 	"go.uber.org/zap"
@@ -41,8 +40,8 @@ type (
 		gameService    service.GameService
 
 		router         router.Router
-		contextHandler handler.Handler
-		gameHandler    handler.Handler
+		contextHandler router.Handler
+		gameHandler    router.Handler
 
 		gptAdapter      adapter.OpenAIAdapter
 		telegramAdapter adapter.TelegramAdapter

@@ -1,13 +1,12 @@
 package deps
 
 import (
-	"github.com/siyoga/rollstory/internal/handler"
-	"github.com/siyoga/rollstory/internal/handler/router"
+	"github.com/siyoga/rollstory/internal/router"
 )
 
 func (d *dependencies) Router() router.Router {
 	if d.router == nil {
-		d.router = router.New(d.cfg.Bot, d.TelegramAdapter(), d.log)
+		d.router = router.New(d.cfg.Bot, d.log, d.TelegramAdapter(), d.ContextHandler(), d.GameHandler())
 
 		d.closeCallbacks = append(d.closeCallbacks, func() {
 			msg := "stop bot router"
@@ -19,17 +18,17 @@ func (d *dependencies) Router() router.Router {
 	return d.router
 }
 
-func (d *dependencies) ContextHandler() handler.Handler {
+func (d *dependencies) ContextHandler() router.Handler {
 	if d.contextHandler == nil {
-		d.contextHandler = handler.NewContextHandler(d.cfg.Timeouts, d.ContextService(), d.Router())
+		d.contextHandler = router.NewContextHandler(d.cfg.Timeouts, d.ContextService())
 	}
 
 	return d.contextHandler
 }
 
-func (d *dependencies) GameHandler() handler.Handler {
+func (d *dependencies) GameHandler() router.Handler {
 	if d.gameHandler == nil {
-		d.gameHandler = handler.NewGameHandler(d.cfg.Timeouts, d.GameService(), d.Router())
+		d.gameHandler = router.NewGameHandler(d.cfg.Timeouts, d.GameService())
 	}
 
 	return d.gameHandler

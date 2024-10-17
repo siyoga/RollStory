@@ -1,4 +1,4 @@
-.PHONY build
+.PHONY: build
 
 build:
-	go build -race -v ./cmd/main.go
+	go build -race -v cmd/main.go

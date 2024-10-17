@@ -105,3 +105,8 @@ func (r *router) unlockRoute(userId int64) {
 
 	delete(r.routesExec, userId)
 }
+
+func (r *router) initRoutes() {
+	r.ctxHandler.FillHandlers(r)
+	r.gameHandler.FillHandlers(r)
+}

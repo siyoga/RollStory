@@ -1,11 +1,10 @@
-package handler
+package router
 
 import (
 	"context"
 
 	"github.com/siyoga/rollstory/internal/config"
 	"github.com/siyoga/rollstory/internal/domain"
-	"github.com/siyoga/rollstory/internal/handler/router"
 	"github.com/siyoga/rollstory/internal/service"
 )
 
@@ -19,33 +18,28 @@ type (
 func NewGameHandler(
 	timeouts config.Timeouts,
 	gameService service.GameService,
-	router router.Router,
 ) Handler {
-	g := gameHandler{
+	return &gameHandler{
 		timeouts: timeouts,
 		service:  gameService,
 	}
-
-	g.fillHandlers(router)
-
-	return &g
 }
 
-func (g *gameHandler) fillHandlers(r router.Router) {
+func (g *gameHandler) FillHandlers(r Router) {
 	r.DefaultHandle(g.messageHandler)
 }
 
-func (g *gameHandler) messageHandler(ctx context.Context, userId int64, msg *domain.Message) router.Response {
+func (g *gameHandler) messageHandler(ctx context.Context, userId int64, msg *domain.Message) response {
 	var cancel func()
 	ctx, cancel = context.WithTimeout(ctx, g.timeouts.RequestTimeout)
 	defer cancel()
 
 	answer, e := g.service.GameMessage(ctx, userId, msg.Text)
 	if e != nil {
-		return router.NewErrResponse(e, userId)
+		return newErrResponse(e, userId)
 	}
 
-	return router.NewSuccessResponse(
+	return newSuccessResponse(
 		domain.MessageResult{
 			Message: answer,
 			ChatId:  msg.Chat.ID,

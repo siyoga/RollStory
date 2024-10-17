@@ -1,4 +1,3 @@
-# base / coords / distributor / http / schedule
 FROM golang:1.22 as build-deps
 
 WORKDIR /usr/src/app
