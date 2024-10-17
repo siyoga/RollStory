@@ -1,0 +1,40 @@
+version: "3"
+
+networks:
+  app:
+    driver: bridge
+
+volumes:
+  redis:
+    driver: local
+
+services:
+  bot:
+    restart: unless-stopped
+    container_name: bot
+    networks:
+      - app
+    build:
+      args:
+        - module=bot
+        - env=dev
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      LOG_PATH: /logs/bot.log
+    volumes:
+      - ./logs:/logs
+
+  redis:
+    restart: unless-stopped
+    container_name: redis
+    networks:
+      - app
+    image: redis:6.2-alpine
+    env_file:
+      - .env
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASS}
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis:/data
