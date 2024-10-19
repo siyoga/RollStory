@@ -21,5 +21,19 @@ func (s *service) CreateWorld(ctx context.Context, userId int64, worldDesc strin
 		return "", errors.AdapterError(err)
 	}
 
+	story, e := s.getStoryByUser(ctx, userId)
+	if e != nil {
+		return "", e
+	}
+
+	if story.World != "" {
+		return fmt.Sprintf("Описание уже установлено:\n%s\nУстановите описание персонажа (/character), чтобы начать игру.", story.World), nil
+	}
+
+	story.World = worldDesc
+	if err := s.storyRepository.SaveSettingsByUser(ctx, userId, story.ToModel()); err != nil {
+		return "", errors.DatabaseError(err)
+	}
+
 	return resp.Messages[0].Content[0].Text.Value, nil
 }

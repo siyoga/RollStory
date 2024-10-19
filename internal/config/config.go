@@ -26,8 +26,9 @@ type (
 	}
 
 	Redis struct {
-		DSN     string
-		CertLoc string
+		StoryDSN  string
+		ThreadDSN string
+		CertLoc   string
 	}
 
 	OpenAI struct {
@@ -77,9 +78,9 @@ func loadTelegramSource(v *viper.Viper) (Bot, error) {
 }
 
 func loadRedisSource(v *viper.Viper) (Redis, error) {
-	dsn := v.GetString("redis.dsn")
-	if dsn != "" {
-		return Redis{DSN: dsn, CertLoc: ""}, nil
+	threadDSN, storyDSN := v.GetString("redis.thread_dsn"), v.GetString("redis.story_dsn")
+	if threadDSN != "" && storyDSN != "" {
+		return Redis{ThreadDSN: threadDSN, StoryDSN: storyDSN, CertLoc: ""}, nil
 	}
 
 	path := v.GetString("apis.redis")
@@ -89,8 +90,9 @@ func loadRedisSource(v *viper.Viper) (Redis, error) {
 	}
 
 	var redisCreds struct {
-		DSN     string `json:"dsn"`
-		CertLoc string `json:"cert_loc"`
+		ThreadDSN string `json:"thread_dsn"`
+		StoryDSN  string `json:"story_dsn"`
+		CertLoc   string `json:"cert_loc"`
 	}
 
 	if err := json.Unmarshal(data, &redisCreds); err != nil {
@@ -98,8 +100,9 @@ func loadRedisSource(v *viper.Viper) (Redis, error) {
 	}
 
 	return Redis{
-		DSN:     redisCreds.DSN,
-		CertLoc: redisCreds.CertLoc,
+		ThreadDSN: redisCreds.ThreadDSN,
+		StoryDSN:  redisCreds.StoryDSN,
+		CertLoc:   redisCreds.CertLoc,
 	}, nil
 }
 

@@ -7,7 +7,7 @@ import (
 
 func (d *dependencies) ThreadRepository() repository.ThreadRepository {
 	if d.threadRepository == nil {
-		d.threadRepository = thread.NewThreadRepository(d.log, d.RedisClient())
+		d.threadRepository = thread.NewThreadRepository(d.log, d.RedisThreadClient())
 	}
 
 	return d.threadRepository

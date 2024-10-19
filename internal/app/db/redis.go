@@ -5,8 +5,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/redis/go-redis/v9"
 	"os"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type RedisClient struct {

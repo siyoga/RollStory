@@ -30,9 +30,9 @@ type (
 		shutdownChannel chan os.Signal
 		closeCallbacks  []func()
 
-		log         logger.Logger
-		cfg         *config.Config
-		redisClient *db.RedisClient
+		log               logger.Logger
+		cfg               *config.Config
+		redisThreadClient *db.RedisClient
 
 		threadRepository repository.ThreadRepository
 
