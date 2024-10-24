@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 
 networks:
   app:
@@ -14,14 +14,14 @@ services:
     container_name: bot
     networks:
       - app
-    build:
-      args:
-        - module=bot
-        - env=${ENV}
-      context: .
-      dockerfile: Dockerfile
     env_file:
       - .env
+    build:
+      args:
+        MODULE: bot
+        MODE: ${MODE}
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - ./logs:/logs
 

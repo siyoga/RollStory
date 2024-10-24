@@ -1,6 +1,8 @@
 package app
 
-import "github.com/siyoga/rollstory/internal/app/deps"
+import (
+	"github.com/siyoga/rollstory/internal/app/deps"
+)
 
 type (
 	Application interface {

@@ -6,7 +6,7 @@ import (
 )
 
 // Response
-func newSuccessResponse(res domain.Message, code int, release *int64) response {
+func newSuccessResponse(res domain.MessageResult, code int, release *int64) response {
 	return response{
 		result:  res,
 		code:    code,
@@ -17,7 +17,7 @@ func newSuccessResponse(res domain.Message, code int, release *int64) response {
 
 func newErrResponse(e *errors.Error, release int64) response {
 	return response{
-		result:  domain.Message{},
+		result:  domain.MessageResult{},
 		code:    int(e.Code),
 		error:   e,
 		release: &release,

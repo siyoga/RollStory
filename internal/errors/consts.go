@@ -6,6 +6,12 @@ var (
 	ErrTelegramGetUpdates  = errors.New("telegram get updates error")
 	ErrTelegramSendMessage = errors.New("telegram send message error")
 
+	ErrGptCreateMessage = errors.New("failed to create message in gpt")
+	ErrGptCreateRun     = errors.New("failed to create run in gpt")
+	ErrGptTimeout       = errors.New("failed to make request in time range")
+	ErrGptRetrieveRun   = errors.New("failed to retrieve run from gpt")
+	ErrGptCreateThread  = errors.New("failed to create thread in gpt")
+
 	ErrRouterNoDefaultRoute = errors.New("no default route in router")
 
 	ErrRedisGetRaw  = errors.New("redis get error")

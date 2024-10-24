@@ -5,7 +5,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/siyoga/rollstory/internal/adapter"
+	"github.com/siyoga/rollstory/internal/adapter/gpt"
+	"github.com/siyoga/rollstory/internal/adapter/telegram"
 	"github.com/siyoga/rollstory/internal/app/db"
 	"github.com/siyoga/rollstory/internal/config"
 	"github.com/siyoga/rollstory/internal/logger"
@@ -35,6 +36,7 @@ type (
 		redisThreadClient *db.RedisClient
 
 		threadRepository repository.ThreadRepository
+		storyRepository  repository.StoryRepository
 
 		contextService service.ContextService
 		gameService    service.GameService
@@ -43,8 +45,8 @@ type (
 		contextHandler router.Handler
 		gameHandler    router.Handler
 
-		gptAdapter      adapter.OpenAIAdapter
-		telegramAdapter adapter.TelegramAdapter
+		gptAdapter      gpt.Adapter
+		telegramAdapter telegram.Adapter
 	}
 )
 

@@ -2,10 +2,21 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/spf13/viper"
+)
+
+type (
+	Mode string
+)
+
+const (
+	Local Mode = "local"
+	Dev   Mode = "dev"
+	Prod  Mode = "prod"
 )
 
 type (
@@ -41,16 +52,20 @@ type (
 	}
 )
 
-func loadTelegramSource(v *viper.Viper) (Bot, error) {
+func loadTelegramSource(v *viper.Viper, mode Mode) (Bot, error) {
 	token, host := v.GetString("telegram.token"), v.GetString("telegram.host")
-	if token != "" {
-		return Bot{
-			Token:     token,
-			Debug:     v.GetBool("debug"),
-			Host:      host,
-			Offset:    0,
-			BatchSize: 1,
-		}, nil
+	if mode == Local {
+		if token != "" && host != "" {
+			return Bot{
+				Token:     token,
+				Debug:     v.GetBool("debug"),
+				Host:      host,
+				Offset:    0,
+				BatchSize: 1,
+			}, nil
+		} else {
+			return Bot{}, fmt.Errorf("telegram.token and telegram.host must be specified with local mode")
+		}
 	}
 
 	path := v.GetString("apis.telegram")
@@ -77,10 +92,14 @@ func loadTelegramSource(v *viper.Viper) (Bot, error) {
 	}, nil
 }
 
-func loadRedisSource(v *viper.Viper) (Redis, error) {
+func loadRedisSource(v *viper.Viper, mode Mode) (Redis, error) {
 	threadDSN, storyDSN := v.GetString("redis.thread_dsn"), v.GetString("redis.story_dsn")
-	if threadDSN != "" && storyDSN != "" {
-		return Redis{ThreadDSN: threadDSN, StoryDSN: storyDSN, CertLoc: ""}, nil
+	if mode == Local {
+		if threadDSN != "" && storyDSN != "" {
+			return Redis{ThreadDSN: threadDSN, StoryDSN: storyDSN, CertLoc: ""}, nil
+		} else {
+			return Redis{}, fmt.Errorf("redis.thread_dsn and redis.story_dsn must be specified with local mode")
+		}
 	}
 
 	path := v.GetString("apis.redis")
@@ -106,13 +125,17 @@ func loadRedisSource(v *viper.Viper) (Redis, error) {
 	}, nil
 }
 
-func loadOpenAiInfo(v *viper.Viper) (OpenAI, error) {
+func loadOpenAiInfo(v *viper.Viper, mode Mode) (OpenAI, error) {
 	token, assistants := v.GetString("openai.token"), v.GetStringSlice("openai.assistants")
-	if token != "" && len(assistants) > 0 {
-		return OpenAI{
-			Token:      token,
-			Assistants: assistants,
-		}, nil
+	if mode == Local {
+		if token != "" && len(assistants) > 0 {
+			return OpenAI{
+				Token:      token,
+				Assistants: assistants,
+			}, nil
+		} else {
+			return OpenAI{}, fmt.Errorf("openai.token and openai.assistants must be specified with local mode")
+		}
 	}
 
 	path := v.GetString("apis.openai")
@@ -145,17 +168,19 @@ func NewConfig(cfgPath string) (*Config, error) {
 		return nil, err
 	}
 
-	tgSource, err := loadTelegramSource(v)
+	mode := Mode(v.GetString("mode"))
+
+	tgSource, err := loadTelegramSource(v, mode)
 	if err != nil {
 		return nil, err
 	}
 
-	openAiCreds, err := loadOpenAiInfo(v)
+	openAiCreds, err := loadOpenAiInfo(v, mode)
 	if err != nil {
 		return nil, err
 	}
 
-	redisSource, err := loadRedisSource(v)
+	redisSource, err := loadRedisSource(v, mode)
 	if err != nil {
 		return nil, err
 	}

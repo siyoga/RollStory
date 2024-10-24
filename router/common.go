@@ -7,7 +7,7 @@ import (
 	"github.com/siyoga/rollstory/internal/errors"
 )
 
-func (r *router) getUpdates() domain.UpdatesChan {
+func (r *router) getUpdates() UpdatesChan {
 	ch := make(chan domain.Update, r.batchSize)
 
 	go func() {

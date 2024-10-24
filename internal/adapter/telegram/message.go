@@ -1,16 +1,34 @@
 package telegram
 
 import (
-	"net/url"
-	"strconv"
+	"encoding/json"
+	"fmt"
+
+	"github.com/siyoga/rollstory/internal/errors"
 )
 
-func (a *adapter) SendMessage(chatID int64, text string) error {
-	q := url.Values{}
-	q.Add("chat_id", strconv.FormatInt(chatID, 10))
-	q.Add("text", text)
+func (a *adapter) SendMessage(req Request) (err error) {
+	defer func() {
+		if err != nil {
+			a.logger.AdapterError(err, errors.ErrTelegramSendMessage)
+		}
+	}()
 
-	_, err := a.makeRequest(methodSendMessage, q)
+	r, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+
+	res, err := a.makeRequest(methodSendMessage, r)
+
+	var message Message
+	if err := json.Unmarshal(res, &message); err != nil {
+		fmt.Println("unmarshal err:", err)
+		return err
+	}
+
+	fmt.Println("message sended:", message)
+
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,7 @@ type (
 
 		Error(err, reason error)
 		DbError(err, reason error, query string) error
-		AdapterError(err, reason error, request string) error
+		AdapterError(err, reason error) error
 
 		ServiceError(err *errors.Error) *errors.Error
 		// ServiceTxError(err error) *errors.Error
@@ -74,12 +74,12 @@ func (l *logger) DbError(err, reason error, query string) error {
 	return err
 }
 
-func (l *logger) AdapterError(err, reason error, request string) error {
+func (l *logger) AdapterError(err, reason error) error {
 	if reason == nil {
 		reason = err
 	}
 
-	l.log.Error(l.genError(fmt.Errorf("%s \n %s", err.Error(), request), reason.Error()))
+	l.log.Error(l.genError(fmt.Errorf("%s", err.Error()), reason.Error()))
 	return err
 }
 

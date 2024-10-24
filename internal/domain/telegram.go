@@ -1,60 +1,52 @@
 package domain
 
+import "github.com/siyoga/rollstory/internal/adapter/telegram"
+
 type (
-	UpdatesChan <-chan Update
-
-	UpdatesResponse struct {
-		Ok     bool     `json:"ok"`
-		Result []Update `json:"result"`
-	}
-
-	Update struct {
-		ID      int      `json:"update_id"`
-		Message *Message `json:"message"`
-	}
-
 	Message struct {
-		Text     string          `json:"text"`
-		From     From            `json:"from"`
-		Chat     Chat            `json:"chat"`
-		Entities []MessageEntity `json:"entities,omitempty"`
+		UpdateId int
+		Text     string
+		ChatId   int64
+		Command  *command
 	}
 
-	MessageEntity struct {
-		Type   string `json:"type"`
-		Offset int    `json:"offset"`
-		Length int    `json:"length"`
-	}
-
-	MessageResult struct {
-		Message string
-		ChatId  int64
-	}
-
-	From struct {
-		Id       int64  `json:"int64"`
-		Username string `json:"username"`
-	}
-
-	Chat struct {
-		ID int64 `json:"id"`
+	command struct {
+		name string
 	}
 )
 
-func (m Message) IsCommand() bool {
-	if m.Entities == nil || len(m.Entities) == 0 {
-		return false
+func (m Message) ToRequest(rows ...[]telegram.Button) telegram.Request {
+	keyboard := make([][]telegram.Button, len(rows))
+
+	for i, row := range rows {
+		keyboard[i] = row
 	}
 
-	entity := m.Entities[0]
-	return entity.Offset == 0 && entity.Type == "bot_command"
+	return telegram.Request{
+		ChatId: m.ChatId,
+		Text:   m.Text,
+		ReplyMarkup: telegram.ReplyKeyboardMarkup{
+			Buttons:      keyboard,
+			IsPersistent: true,
+		},
+	}
 }
 
-func (m Message) GetCommand() string {
-	if !m.IsCommand() {
-		return "text"
+func (_ Message) FromUpdate(u telegram.Update) Message {
+	return Message{
+		UpdateId: u.ID,
+		Text:     u.Message.Text,
+		ChatId:   u.Message.Chat.ID,
+		Command:  getCommand(u.Message),
+	}
+}
+
+func getCommand(m *telegram.Message) *command {
+	if m.IsCommand() {
+		return &command{
+			name: m.GetCommand(),
+		}
 	}
 
-	entity := m.Entities[0]
-	return m.Text[1:entity.Length]
+	return nil
 }

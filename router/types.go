@@ -9,17 +9,13 @@ import (
 
 type (
 	Route struct {
-		name    string
-		handler cmdHandler
-		buttons []button
-	}
+		name string
 
-	button struct {
-		text string
+		handler cmdHandler
 	}
 
 	response struct {
-		result domain.Message
+		result domain.MessageResult
 		code   int
 		error  *errors.Error
 
@@ -27,5 +23,5 @@ type (
 		release *int64
 	}
 
-	cmdHandler func(ctx context.Context, userId int64, msg domain.Message) response
+	cmdHandler func(ctx context.Context, userId int64, msg *domain.Message) response
 )

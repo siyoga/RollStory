@@ -1,20 +1,27 @@
 package gpt
 
 import (
-	def "github.com/siyoga/rollstory/internal/adapter"
+	"context"
+
 	"github.com/siyoga/rollstory/internal/config"
+	"github.com/siyoga/rollstory/internal/domain"
 	"github.com/siyoga/rollstory/internal/logger"
 
 	"github.com/sashabaranov/go-openai"
 )
 
-var _ def.OpenAIAdapter = (*adapter)(nil)
+type (
+	Adapter interface {
+		CreateThread(ctx context.Context) (openai.Thread, error)
+		Request(ctx context.Context, threadId string, msg string, respLimit int, respOrder domain.ReturnOrder) (openai.MessagesList, error)
+	}
 
-type adapter struct {
-	cfg    config.OpenAI
-	log    logger.Logger
-	client *openai.Client
-}
+	adapter struct {
+		cfg    config.OpenAI
+		log    logger.Logger
+		client *openai.Client
+	}
+)
 
 func NewAdapter(
 	cfg config.OpenAI,

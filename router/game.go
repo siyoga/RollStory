@@ -29,7 +29,7 @@ func (g *gameHandler) FillHandlers(r Router) {
 	r.DefaultHandle(g.messageHandler)
 }
 
-func (g *gameHandler) messageHandler(ctx context.Context, userId int64, msg domain.Message) response {
+func (g *gameHandler) messageHandler(ctx context.Context, userId int64, msg *domain.Message) response {
 	var cancel func()
 	ctx, cancel = context.WithTimeout(ctx, g.timeouts.RequestTimeout)
 	defer cancel()
@@ -40,9 +40,9 @@ func (g *gameHandler) messageHandler(ctx context.Context, userId int64, msg doma
 	}
 
 	return newSuccessResponse(
-		domain.Message{
-			Text:   answer,
-			ChatId: msg.ChatId,
+		domain.MessageResult{
+			Message: answer,
+			ChatId:  msg.Chat.ID,
 		},
 		200,
 		&userId,

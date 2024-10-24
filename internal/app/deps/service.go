@@ -8,7 +8,7 @@ import (
 
 func (d *dependencies) ContextService() service.ContextService {
 	if d.contextService == nil {
-		d.contextService = ctxSvc.NewContextService(d.log, d.GptAdapter(), d.ThreadRepository())
+		d.contextService = ctxSvc.NewContextService(d.log, d.GptAdapter(), d.StoryRepository(), d.ThreadRepository())
 	}
 
 	return d.contextService

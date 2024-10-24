@@ -6,7 +6,7 @@ import (
 
 func (d *dependencies) Router() router.Router {
 	if d.router == nil {
-		d.router = router.New(d.cfg.Bot, d.log, d.TelegramAdapter(), d.ContextHandler(), d.GameHandler())
+		d.router = router.New(d.cfg.Bot.Debug, d.log, d.TelegramAdapter(), d.ContextHandler(), d.GameHandler())
 
 		d.closeCallbacks = append(d.closeCallbacks, func() {
 			msg := "stop bot router"

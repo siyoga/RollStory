@@ -27,7 +27,7 @@ func (s *service) CreateWorld(ctx context.Context, userId int64, worldDesc strin
 	}
 
 	if story.World != "" {
-		return fmt.Sprintf("Описание уже установлено:\n%s\nУстановите описание персонажа (/character), чтобы начать игру.", story.World), nil
+		return fmt.Sprintf("Описание мира уже установлено:\n%s\n\nУстановите описание персонажа (/character), чтобы начать игру.", story.World), nil
 	}
 
 	story.World = worldDesc

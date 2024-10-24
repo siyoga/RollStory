@@ -11,6 +11,7 @@ type (
 		CreateThreadAndSendInstruction(ctx context.Context, userId int64) (string, *errors.Error)
 		CreateWorld(ctx context.Context, userId int64, worldDesc string) (string, *errors.Error)
 		CreateCharacter(ctx context.Context, userId int64, characterDesc string) (string, *errors.Error)
+		BeginStory(ctx context.Context, userId int64) (string, *errors.Error)
 	}
 
 	GameService interface {
