@@ -4,39 +4,10 @@ import (
 	"context"
 	"sync"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/siyoga/rollstory/internal/adapter/telegram"
 	"github.com/siyoga/rollstory/internal/errors"
 	"github.com/siyoga/rollstory/internal/logger"
-)
-
-type (
-	Router interface {
-		Handle(cmd string, handler cmdHandler) *Route
-		DefaultHandle(handler cmdHandler) *Route
-		Run()
-		Stop()
-	}
-
-	Handler interface {
-		FillHandlers(r Router)
-	}
-
-	router struct {
-		debug bool
-
-		mu           sync.Mutex
-		shutdownChan chan struct{}
-		routes       map[string]*Route
-		routesExec   map[int64]*Route // mapping to already executing routes by user
-		defaultRoute *Route
-
-		client telegram.Adapter
-
-		ctxHandler  Handler
-		gameHandler Handler
-
-		logger logger.Logger
-	}
 )
 
 func New(
@@ -53,8 +24,10 @@ func New(
 
 		mu:           sync.Mutex{},
 		shutdownChan: make(chan struct{}),
-		routes:       make(map[string]*Route),
-		routesExec:   make(map[int64]*Route),
+
+		triggers:   make(map[Command]uuid.UUID),
+		routes:     make(map[uuid.UUID]*route),
+		routesExec: make(map[int]*execRoute),
 
 		client: adapter,
 
@@ -65,31 +38,34 @@ func New(
 	}
 }
 
-func (r *Route) AddButton(btns ...button) {
-	// rewrite slice to make it exact needed len and cap
-	keyboard := make([]button, len(btns))
+func (r *route) Handle(handler cmdHandler) *route {
+	r.handler = handler
 
-	for i, btn := range btns {
-		keyboard[i] = btn
-	}
-
-	r.buttons = keyboard
+	return r
 }
 
-func (r *router) Handle(cmd string, handler cmdHandler) *Route {
-	route := &Route{
-		name:    cmd,
-		handler: handler,
+// attach route to route passed as argument
+func (r *route) LinkTo(routes ...Command) {
+	r.linked = append(r.linked, routes...)
+}
+
+func (r *router) Route(triggers ...Command) *route {
+	id := uuid.NewV4()
+	route := &route{
+		id: id,
 	}
 
-	r.routes[route.name] = route
+	for _, trigger := range triggers {
+		r.triggers[trigger] = id
+	}
 
+	r.routes[id] = route
 	return route
 }
 
-func (r *router) DefaultHandle(handler cmdHandler) *Route {
-	route := &Route{
-		name:    "text",
+func (r *router) DefaultRoute(handler cmdHandler) *route {
+	route := &route{
+		id:      uuid.NewV4(),
 		handler: handler,
 	}
 
@@ -113,7 +89,7 @@ func (r *router) Run() {
 		for {
 			select {
 			case upd := <-updChan:
-				if upd.Message == nil {
+				if upd.Message == nil && upd.Callback == nil {
 					continue
 				}
 

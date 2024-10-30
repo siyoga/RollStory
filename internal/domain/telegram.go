@@ -1,52 +1,85 @@
 package domain
 
-import "github.com/siyoga/rollstory/internal/adapter/telegram"
+// update as needed ref: https://core.telegram.org/bots/api#messageentity
+type SpecialType string
+type InternalCommand string
+type RequestType int
 
+const (
+	Mention SpecialType = "mention"
+	Hashtag SpecialType = "hashtag"
+	Cashtag SpecialType = "cashtag"
+	Command SpecialType = "bot_command"
+	Url     SpecialType = "url"
+	Email   SpecialType = "email"
+)
+
+const (
+	Cancel InternalCommand = "/cancel"
+)
+
+const (
+	Message RequestType = iota
+	Callback
+)
+
+// Markups a.k.a keyboard/buttons
 type (
-	Message struct {
-		UpdateId int
-		Text     string
-		ChatId   int64
-		Command  *command
+	Markup interface {
+		AddRow(row []Button)
 	}
 
-	command struct {
-		name string
+	InlineMarkup struct {
+		Keyboard map[int][]Button //represent better version of 2d-array map[1] - first row and go on
+	}
+
+	ReplyMarkup struct {
+		Keyboard     map[int][]Button
+		IsPersistent bool
+		Resize       bool
+		OneTime      bool
+	}
+
+	Button struct {
+		Text string
+		Data string // for inline markups
 	}
 )
 
-func (m Message) ToRequest(rows ...[]telegram.Button) telegram.Request {
-	keyboard := make([][]telegram.Button, len(rows))
-
-	for i, row := range rows {
-		keyboard[i] = row
-	}
-
-	return telegram.Request{
-		ChatId: m.ChatId,
-		Text:   m.Text,
-		ReplyMarkup: telegram.ReplyKeyboardMarkup{
-			Buttons:      keyboard,
-			IsPersistent: true,
-		},
-	}
+func (im InlineMarkup) AddRow(row []Button) {
+	im.Keyboard[len(im.Keyboard)+1] = row
 }
 
-func (_ Message) FromUpdate(u telegram.Update) Message {
-	return Message{
-		UpdateId: u.ID,
-		Text:     u.Message.Text,
-		ChatId:   u.Message.Chat.ID,
-		Command:  getCommand(u.Message),
-	}
+func (rm ReplyMarkup) AddRow(row []Button) {
+	rm.Keyboard[len(rm.Keyboard)+1] = row
 }
 
-func getCommand(m *telegram.Message) *command {
-	if m.IsCommand() {
-		return &command{
-			name: m.GetCommand(),
-		}
+type (
+	User struct {
+		Id       int
+		Username string
 	}
 
-	return nil
-}
+	Special struct {
+		Type   SpecialType
+		Offset int
+		Length int
+	}
+
+	Request struct {
+		Id   int
+		Type RequestType
+
+		CallbackId *string // pointer cause not every request is a callback.
+		MessageId  int
+		ChatId     int
+
+		ReplyTo *int // message_id reply to
+		From    User
+		Data    string
+
+		Command  *string
+		Specials []Special
+		Markup   Markup
+	}
+)

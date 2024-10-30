@@ -10,57 +10,112 @@ import (
 )
 
 func (r *router) handleUpdate(ctx context.Context, u telegram.Update) {
-	cmdName := u.Message.GetCommand()
+	req := u.ToDomain()
 
-	executingRoute := r.getExecRoute(u.Message.From.Id)
-	if executingRoute != nil {
-		r.requestWithMessageResponse(ctx, u, executingRoute)
-	} else {
-		if u.Message.IsCommand() {
-			if _, ok := r.routes[cmdName]; ok {
-				r.requestWithMessageResponse(ctx, u, r.routes[cmdName])
+	executingRoute := r.getExecRoute(req.From.Id)
+	switch executingRoute {
+	case nil:
+		if req.Command != nil {
+			if cmdId, ok := r.getCommandId(Command(*req.Command)); ok {
+				r.requestWithMessageResponse(ctx, req, r.getRoute(cmdId))
 			} else {
-				msg := domain.Message{
-					Text:   "Команда не найдена",
-					ChatId: u.Message.Chat.ID,
-				}.ToRequest(nil)
-
-				if err := r.client.SendMessage(msg); err != nil {
-					r.logger.Error(errors.ErrTelegramSendMessage, errors.ErrAuthNumberAssignmentFailed)
-				}
+				r.commandNotFound(req.ChatId)
 			}
 		} else {
-			r.requestWithMessageResponse(ctx, u, r.defaultRoute)
+			r.requestWithMessageResponse(ctx, req, r.defaultRoute)
 		}
+
+	// cancel execution of the current command and start execution of a new called command
+	default:
+		route := executingRoute.route
+
+		if req.Command != nil {
+			cmd := Command(*req.Command)
+
+			if cmd == CancelSlash {
+				r.cancelExec(executingRoute)
+				return
+			}
+
+			if !executingRoute.isLinked(cmd) {
+				r.cancelExec(executingRoute)
+			}
+
+			cmdId, ok := r.getCommandId(cmd)
+			if !ok {
+				r.commandNotFound(req.ChatId)
+				return
+			}
+			route = r.getRoute(cmdId)
+		}
+
+		r.clearMarkups(executingRoute)
+		r.requestWithMessageResponse(ctx, req, route)
 	}
 }
 
-func (r *router) requestWithMessageResponse(ctx context.Context, u telegram.Update, route *Route) {
-	r.lockRoute(u.Message.From.Id, route)
-	res := route.handler(ctx, u.Message.From.Id, domain.Message{}.FromUpdate(u))
-	r.logRequest(u, res.error)
+func (r *router) cancelExec(route *execRoute) {
+	r.unlockRoute(route.userId)
+
+	markups := &domain.InlineMarkup{
+		Keyboard: make(map[int][]domain.Button),
+	}
+
+	if err := r.client.EditMessage(route.respChatId, route.respMessageId, "Отменено", markups); err != nil {
+		r.logger.Error(errors.ErrTelegramSendMessage, err)
+	}
+}
+
+func (r *router) clearMarkups(route *execRoute) {
+	r.unlockRoute(route.userId)
+
+	if err := r.client.EditMessage(route.respChatId, route.respMessageId, route.respText, &domain.InlineMarkup{}); err != nil {
+		r.logger.Error(errors.ErrTelegramSendMessage, err)
+	}
+}
+
+func (r *router) commandNotFound(chatId int) {
+	res := telegram.Response{}.FromDomain(domain.Request{
+		Data:   "Команда не найдена",
+		ChatId: chatId,
+	})
+
+	if _, err := r.client.SendMessage(res); err != nil {
+		r.logger.Error(errors.ErrTelegramSendMessage, errors.ErrAuthNumberAssignmentFailed)
+	}
+}
+
+// for now callbacks only used for cancel command executing
+func (r *router) requestWithMessageResponse(ctx context.Context, req domain.Request, route *route) {
+	res := route.handler(ctx, req.From.Id, req)
+	r.logRequest(req, res.error)
+
+	if res.error != nil {
+		fmt.Println("oshibka")
+		if r.debug {
+			res.result.Data = fmt.Sprintf("ERROR | Reason: %s, Details: %s", res.error.Reason, res.error.Details.Error())
+		} else {
+			// TODO: maybe send error in private message if bot in prod mode
+			res.result.Data = "Произошла ошибка. Попробуйте повторить запрос."
+			res.release = &req.From.Id
+		}
+	}
+
+	msg, err := r.client.SendMessage(telegram.Response{}.FromDomain(res.result))
+	if err != nil {
+		r.logger.Error(errors.ErrTelegramSendMessage, err)
+	}
+
+	r.lockRoute(req.From.Id, execRoute{
+		route:  route,
+		userId: req.From.Id,
+
+		respText:      msg.Text,
+		respChatId:    msg.Chat.ID,
+		respMessageId: msg.Id,
+	})
 
 	if res.release != nil {
 		r.unlockRoute(*res.release)
-	}
-
-	if res.error != nil {
-		if r.debug {
-			res.result.Text = fmt.Sprintf("Error: %d, Reason: %s, Details: %s", res.code, res.error.Reason, res.error.Details.Error())
-		} else {
-			// TODO: maybe send error in private message if bot in prod mode
-			res.result.Text = "Произошла ошибка. Попробуйте повторить запрос."
-		}
-	}
-
-	keyboard := make([]telegram.Button, len(route.buttons))
-	for i, btn := range route.buttons {
-		keyboard[i] = telegram.Button{
-			Text: btn.text,
-		}
-	}
-
-	if err := r.client.SendMessage(res.result.ToRequest(keyboard)); err != nil {
-		r.logger.Error(errors.ErrTelegramSendMessage, err)
 	}
 }

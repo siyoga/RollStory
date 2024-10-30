@@ -10,19 +10,19 @@ import (
 var _ def.GameService = (*service)(nil)
 
 type service struct {
-	log              logger.Logger
-	gptAdapter       gpt.Adapter
-	threadRepository repository.ThreadRepository
+	log            logger.Logger
+	gptAdapter     gpt.Adapter
+	userRepository repository.UserRepository
 }
 
 func NewGameService(
 	log logger.Logger,
 	gptAdapter gpt.Adapter,
-	threadRepository repository.ThreadRepository,
+	userRepository repository.UserRepository,
 ) *service {
 	return &service{
-		log:              log,
-		gptAdapter:       gptAdapter,
-		threadRepository: threadRepository,
+		log:            log,
+		gptAdapter:     gptAdapter,
+		userRepository: userRepository,
 	}
 }

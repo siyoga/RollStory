@@ -13,6 +13,8 @@ import (
 type (
 	Adapter interface {
 		CreateThread(ctx context.Context) (openai.Thread, error)
+		DeleteThread(ctx context.Context, threadId string) error
+
 		Request(ctx context.Context, threadId string, msg string, respLimit int, respOrder domain.ReturnOrder) (openai.MessagesList, error)
 	}
 

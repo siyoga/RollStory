@@ -13,22 +13,19 @@ type service struct {
 	log        logger.Logger
 	gptAdapter gpt.Adapter
 
-	storyRepository  repository.StoryRepository
-	threadRepository repository.ThreadRepository
+	userRepository repository.UserRepository
 }
 
 func NewContextService(
 	log logger.Logger,
 	gptAdapter gpt.Adapter,
 
-	storyRepository repository.StoryRepository,
-	threadRepository repository.ThreadRepository,
+	userRepository repository.UserRepository,
 ) *service {
 	return &service{
 		log:        log,
 		gptAdapter: gptAdapter,
 
-		storyRepository:  storyRepository,
-		threadRepository: threadRepository,
+		userRepository: userRepository,
 	}
 }

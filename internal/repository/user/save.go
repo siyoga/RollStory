@@ -1,4 +1,4 @@
-package story
+package user
 
 import (
 	"context"
@@ -9,13 +9,13 @@ import (
 	"github.com/siyoga/rollstory/internal/models"
 )
 
-func (r *repository) SaveSettingsByUser(ctx context.Context, userId int64, story models.Story) error {
-	obj, err := json.Marshal(story)
+func (r *repository) SaveUser(ctx context.Context, userId int, user models.User) error {
+	obj, err := json.Marshal(user)
 	if err != nil {
 		return r.log.DbError(err, errors.ErrRedisSaveRaw, "redis save")
 	}
 
-	if err := r.client.Set(ctx, strconv.FormatInt(userId, 10), obj, 0).Err(); err != nil {
+	if err := r.client.Set(ctx, strconv.Itoa(userId), obj, 0).Err(); err != nil {
 		return r.log.DbError(err, errors.ErrRedisSaveRaw, "redis save")
 	}
 

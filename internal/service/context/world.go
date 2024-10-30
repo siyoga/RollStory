@@ -6,34 +6,31 @@ import (
 
 	"github.com/siyoga/rollstory/internal/domain"
 	"github.com/siyoga/rollstory/internal/errors"
+	"github.com/siyoga/rollstory/internal/models"
 )
 
-func (s *service) CreateWorld(ctx context.Context, userId int64, worldDesc string) (string, *errors.Error) {
-	threadId, err := s.threadRepository.GetThreadByUser(ctx, userId)
-	if err != nil {
-		return "", errors.DatabaseError(err)
-	}
-
-	worldDesc = fmt.Sprintf("Описание мира:\n%s", worldDesc)
-
-	resp, err := s.gptAdapter.Request(ctx, threadId, worldDesc, 1, domain.Asc)
-	if err != nil {
+func (s *service) CreateWorld(ctx context.Context, userId int, user *domain.UserInfo, worldDesc string) (string, *errors.Error) {
+	if _, err := s.gptAdapter.Request(ctx, user.ThreadId, fmt.Sprintf("Описание мира:\n%s", worldDesc), 1, domain.Asc); err != nil {
 		return "", errors.AdapterError(err)
 	}
 
-	story, e := s.getStoryByUser(ctx, userId)
-	if e != nil {
-		return "", e
-	}
-
-	if story.World != "" {
-		return fmt.Sprintf("Описание мира уже установлено:\n%s\n\nУстановите описание персонажа (/character), чтобы начать игру.", story.World), nil
-	}
-
-	story.World = worldDesc
-	if err := s.storyRepository.SaveSettingsByUser(ctx, userId, story.ToModel()); err != nil {
+	user.World = worldDesc
+	if err := s.userRepository.SaveUser(ctx, userId, models.User{}.FromDomain(*user)); err != nil {
 		return "", errors.DatabaseError(err)
 	}
 
-	return resp.Messages[0].Content[0].Text.Value, nil
+	return "✅Контекст игрового мира сохранён!", nil
+}
+
+func (s *service) EditWorld(ctx context.Context, userId int, user *domain.UserInfo, newWorldDesc string) (string, *errors.Error) {
+	if _, err := s.gptAdapter.Request(ctx, user.ThreadId, fmt.Sprintf("Забудь старое описание мира. Это новое описание мира:\n%s", newWorldDesc), 1, domain.Asc); err != nil {
+		return "", errors.AdapterError(err)
+	}
+
+	user.World = newWorldDesc
+	if err := s.userRepository.SaveUser(ctx, userId, models.User{}.FromDomain(*user)); err != nil {
+		return "", errors.DatabaseError(err)
+	}
+
+	return "✅Контекст игрового мира сохранён!", nil
 }

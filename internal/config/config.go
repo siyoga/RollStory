@@ -37,9 +37,8 @@ type (
 	}
 
 	Redis struct {
-		StoryDSN  string
-		ThreadDSN string
-		CertLoc   string
+		DSN     string
+		CertLoc string
 	}
 
 	OpenAI struct {
@@ -93,10 +92,10 @@ func loadTelegramSource(v *viper.Viper, mode Mode) (Bot, error) {
 }
 
 func loadRedisSource(v *viper.Viper, mode Mode) (Redis, error) {
-	threadDSN, storyDSN := v.GetString("redis.thread_dsn"), v.GetString("redis.story_dsn")
+	DSN := v.GetString("redis.dsn")
 	if mode == Local {
-		if threadDSN != "" && storyDSN != "" {
-			return Redis{ThreadDSN: threadDSN, StoryDSN: storyDSN, CertLoc: ""}, nil
+		if DSN != "" {
+			return Redis{DSN: DSN, CertLoc: ""}, nil
 		} else {
 			return Redis{}, fmt.Errorf("redis.thread_dsn and redis.story_dsn must be specified with local mode")
 		}
@@ -109,9 +108,8 @@ func loadRedisSource(v *viper.Viper, mode Mode) (Redis, error) {
 	}
 
 	var redisCreds struct {
-		ThreadDSN string `json:"thread_dsn"`
-		StoryDSN  string `json:"story_dsn"`
-		CertLoc   string `json:"cert_loc"`
+		DSN     string `json:"dsn"`
+		CertLoc string `json:"cert_loc"`
 	}
 
 	if err := json.Unmarshal(data, &redisCreds); err != nil {
@@ -119,9 +117,8 @@ func loadRedisSource(v *viper.Viper, mode Mode) (Redis, error) {
 	}
 
 	return Redis{
-		ThreadDSN: redisCreds.ThreadDSN,
-		StoryDSN:  redisCreds.StoryDSN,
-		CertLoc:   redisCreds.CertLoc,
+		DSN:     redisCreds.DSN,
+		CertLoc: redisCreds.CertLoc,
 	}, nil
 }
 

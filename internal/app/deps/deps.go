@@ -35,8 +35,7 @@ type (
 		cfg               *config.Config
 		redisThreadClient *db.RedisClient
 
-		threadRepository repository.ThreadRepository
-		storyRepository  repository.StoryRepository
+		userRepo repository.UserRepository
 
 		contextService service.ContextService
 		gameService    service.GameService

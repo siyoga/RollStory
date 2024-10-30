@@ -7,13 +7,8 @@ import (
 )
 
 type (
-	ThreadRepository interface {
-		SaveThreadForUser(ctx context.Context, threadId string, userId int64) error
-		GetThreadByUser(ctx context.Context, userID int64) (string, error)
-	}
-
-	StoryRepository interface {
-		SaveSettingsByUser(ctx context.Context, userId int64, story models.Story) error
-		GetStoryByUser(ctx context.Context, userId int64) (models.Story, error)
+	UserRepository interface {
+		SaveUser(ctx context.Context, userId int, user models.User) error
+		GetUser(ctx context.Context, userID int) (models.User, error)
 	}
 )

@@ -28,7 +28,7 @@ func (d *dependencies) ContextHandler() router.Handler {
 
 func (d *dependencies) GameHandler() router.Handler {
 	if d.gameHandler == nil {
-		d.gameHandler = router.NewGameHandler(d.cfg.Timeouts, d.GameService())
+		d.gameHandler = router.NewGameHandler(d.cfg.Timeouts, d.GameService(), d.ContextService())
 	}
 
 	return d.gameHandler

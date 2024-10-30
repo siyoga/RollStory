@@ -9,17 +9,23 @@ import (
 	"path"
 
 	"github.com/siyoga/rollstory/internal/config"
+	"github.com/siyoga/rollstory/internal/domain"
 	"github.com/siyoga/rollstory/internal/logger"
 )
 
 const (
-	methodGetUpdates  = "getUpdates"
-	methodSendMessage = "sendMessage"
+	methodGetUpdates = "getUpdates"
+
+	methodSendMessage   = "sendMessage"
+	methodDeleteMessage = "deleteMessage"
+	methodEditMessage   = "editMessageText"
 )
 
 type (
 	Adapter interface {
-		SendMessage(req Request) error
+		SendMessage(req Response) (Message, error)
+		DeleteMessage(chatId int, messageId int) (err error)
+		EditMessage(chatId int, messageId int, text string, markups *domain.InlineMarkup) (err error)
 		Updates() UpdatesChan
 	}
 

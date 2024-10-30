@@ -2,22 +2,13 @@ package deps
 
 import (
 	"github.com/siyoga/rollstory/internal/repository"
-	"github.com/siyoga/rollstory/internal/repository/story"
-	"github.com/siyoga/rollstory/internal/repository/thread"
+	"github.com/siyoga/rollstory/internal/repository/user"
 )
 
-func (d *dependencies) ThreadRepository() repository.ThreadRepository {
-	if d.threadRepository == nil {
-		d.threadRepository = thread.NewThreadRepository(d.log, d.RedisThreadClient())
+func (d *dependencies) UserRepository() repository.UserRepository {
+	if d.userRepo == nil {
+		d.userRepo = user.NewUserRepository(d.log, d.RedisClient())
 	}
 
-	return d.threadRepository
-}
-
-func (d *dependencies) StoryRepository() repository.StoryRepository {
-	if d.storyRepository == nil {
-		d.storyRepository = story.NewThreadRepository(d.log, d.RedisStoryClient())
-	}
-
-	return d.storyRepository
+	return d.userRepo
 }

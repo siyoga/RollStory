@@ -8,7 +8,7 @@ import (
 
 func (d *dependencies) ContextService() service.ContextService {
 	if d.contextService == nil {
-		d.contextService = ctxSvc.NewContextService(d.log, d.GptAdapter(), d.StoryRepository(), d.ThreadRepository())
+		d.contextService = ctxSvc.NewContextService(d.log, d.GptAdapter(), d.UserRepository())
 	}
 
 	return d.contextService
@@ -16,7 +16,7 @@ func (d *dependencies) ContextService() service.ContextService {
 
 func (d *dependencies) GameService() service.GameService {
 	if d.gameService == nil {
-		d.gameService = game.NewGameService(d.log, d.GptAdapter(), d.ThreadRepository())
+		d.gameService = game.NewGameService(d.log, d.GptAdapter(), d.UserRepository())
 	}
 
 	return d.gameService

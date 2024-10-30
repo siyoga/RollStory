@@ -4,21 +4,22 @@ import (
 	"context"
 
 	"github.com/siyoga/rollstory/internal/errors"
+	"github.com/siyoga/rollstory/internal/models"
 )
 
-func (s *service) CreateThreadAndSendInstruction(ctx context.Context, userId int64) (string, *errors.Error) {
-	threadId, err := s.threadRepository.GetThreadByUser(ctx, userId)
+func (s *service) CreateThreadAndSendInstruction(ctx context.Context, userId int) (string, *errors.Error) {
+	user, err := s.userRepository.GetUser(ctx, userId)
 	if err != nil {
 		return "", errors.DatabaseError(err)
 	}
 
-	if threadId == "" {
+	if user.ToDomain().IsEmpty() {
 		thread, err := s.gptAdapter.CreateThread(ctx)
 		if err != nil {
 			return "", errors.AdapterError(err)
 		}
 
-		if err := s.threadRepository.SaveThreadForUser(ctx, thread.ID, userId); err != nil {
+		if err := s.userRepository.SaveUser(ctx, userId, models.User{ThreadId: thread.ID}); err != nil {
 			return "", errors.DatabaseError(err)
 		}
 	}

@@ -6,34 +6,31 @@ import (
 
 	"github.com/siyoga/rollstory/internal/domain"
 	"github.com/siyoga/rollstory/internal/errors"
+	"github.com/siyoga/rollstory/internal/models"
 )
 
-func (s *service) CreateCharacter(ctx context.Context, userId int64, characterDesc string) (string, *errors.Error) {
-	threadId, err := s.threadRepository.GetThreadByUser(ctx, userId)
-	if err != nil {
-		return "", errors.DatabaseError(err)
-	}
-
-	characterDesc = fmt.Sprintf("Описание персонажа:\n%s", characterDesc)
-
-	resp, err := s.gptAdapter.Request(ctx, threadId, characterDesc, 1, domain.Asc)
-	if err != nil {
+func (s *service) CreateCharacter(ctx context.Context, userId int, user *domain.UserInfo, characterDesc string) (string, *errors.Error) {
+	if _, err := s.gptAdapter.Request(ctx, user.ThreadId, fmt.Sprintf("Описание персонажа:\n\n%s", characterDesc), 1, domain.Asc); err != nil {
 		return "", errors.AdapterError(err)
 	}
 
-	story, e := s.getStoryByUser(ctx, userId)
-	if e != nil {
-		return "", e
-	}
-
-	if story.Character != "" {
-		return fmt.Sprintf("Описание персонажа уже установлено:\n%s\n\nУстановите описание мира (/world), чтобы начать игру.", story.Character), nil
-	}
-
-	story.Character = characterDesc
-	if err := s.storyRepository.SaveSettingsByUser(ctx, userId, story.ToModel()); err != nil {
+	user.Character = characterDesc
+	if err := s.userRepository.SaveUser(ctx, userId, models.User{}.FromDomain(*user)); err != nil {
 		return "", errors.DatabaseError(err)
 	}
 
-	return resp.Messages[0].Content[0].Text.Value, nil
+	return "✅Персонаж сохранён!", nil
+}
+
+func (s *service) EditCharacter(ctx context.Context, userId int, user *domain.UserInfo, newCharacterDesc string) (string, *errors.Error) {
+	if _, err := s.gptAdapter.Request(ctx, user.ThreadId, fmt.Sprintf("Забудь старое описание персонажа. Это новое описание персонажа:\n\n%s", newCharacterDesc), 1, domain.Asc); err != nil {
+		return "", errors.AdapterError(err)
+	}
+
+	user.Character = newCharacterDesc
+	if err := s.userRepository.SaveUser(ctx, userId, models.User{}.FromDomain(*user)); err != nil {
+		return "", errors.DatabaseError(err)
+	}
+
+	return "✅Персонаж обновлен!", nil
 }

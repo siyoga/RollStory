@@ -11,6 +11,7 @@ var (
 	ErrGptTimeout       = errors.New("failed to make request in time range")
 	ErrGptRetrieveRun   = errors.New("failed to retrieve run from gpt")
 	ErrGptCreateThread  = errors.New("failed to create thread in gpt")
+	ErrGptDeleteThread  = errors.New("failed to delete thread")
 
 	ErrRouterNoDefaultRoute = errors.New("no default route in router")
 

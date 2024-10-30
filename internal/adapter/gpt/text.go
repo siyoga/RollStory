@@ -25,6 +25,22 @@ func (a *adapter) CreateThread(
 	return resp, nil
 }
 
+func (a *adapter) DeleteThread(
+	ctx context.Context,
+	threadId string,
+) error {
+	resp, err := a.client.DeleteThread(ctx, threadId)
+	if err != nil {
+		return a.log.AdapterError(err, errors.ErrGptDeleteThread)
+	}
+
+	if resp.Deleted {
+		return nil
+	} else {
+		return a.log.AdapterError(fmt.Errorf("failed to delete thread"), errors.ErrGptDeleteThread)
+	}
+}
+
 // TODO: fix similar error details
 func (a *adapter) Request(ctx context.Context, threadId string, msg string, respLimit int, respOrder domain.ReturnOrder) (openai.MessagesList, error) {
 	if _, err := a.client.CreateMessage(

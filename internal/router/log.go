@@ -1,27 +1,32 @@
 package router
 
 import (
-	"github.com/siyoga/rollstory/internal/adapter/telegram"
+	"github.com/siyoga/rollstory/internal/domain"
 	"github.com/siyoga/rollstory/internal/errors"
 
 	"go.uber.org/zap"
 )
 
-func (r *router) defaultLogField(u telegram.Update) []zap.Field {
+func (r *router) defaultLogField(req domain.Request) []zap.Field {
+	cmd := "default"
+	if req.Command != nil {
+		cmd = *req.Command
+	}
+
 	return []zap.Field{
-		zap.Uint("id", uint(u.ID)), zap.String("command", u.Message.GetCommand()),
-		zap.String("user_id", string(u.Message.From.Id)),
+		zap.Uint("id", uint(req.Id)), zap.String("command", cmd),
+		zap.String("user_id", string(req.From.Id)),
 	}
 }
 
-func (r *router) logRequest(u telegram.Update, err *errors.Error) {
+func (r *router) logRequest(req domain.Request, err *errors.Error) {
 	var fields []zap.Field
 
-	fields = append(r.defaultLogField(u), zap.Bool("success", true))
+	fields = append(r.defaultLogField(req), zap.Bool("success", true))
 
 	if err != nil {
 		fields = append(
-			r.defaultLogField(u),
+			r.defaultLogField(req),
 			zap.Bool("success", false),
 			zap.String("reason", err.Reason),
 			zap.NamedError("details", err.Details),
