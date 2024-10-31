@@ -11,3 +11,9 @@ run:
 
 stop:
 	docker compose down
+
+run_prod:
+	docker compose -f docker-compose.prod.yml up -d --build
+
+stop_prod:
+	docker compose -f docker-compose.prod.yml down

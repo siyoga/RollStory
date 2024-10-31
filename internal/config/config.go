@@ -107,25 +107,30 @@ func loadRedisSource(v *viper.Viper, mode Mode) (Redis, error) {
 		return Redis{}, err
 	}
 
-	var redisCreds struct {
+	var creds struct {
 		DSN     string `json:"dsn"`
 		CertLoc string `json:"cert_loc"`
 	}
 
-	if err := json.Unmarshal(data, &redisCreds); err != nil {
+	if err := json.Unmarshal(data, &creds); err != nil {
 		return Redis{}, err
 	}
 
 	return Redis{
-		DSN:     redisCreds.DSN,
-		CertLoc: redisCreds.CertLoc,
+		DSN:     creds.DSN,
+		CertLoc: creds.CertLoc,
 	}, nil
 }
 
 func loadOpenAiInfo(v *viper.Viper, mode Mode) (OpenAI, error) {
-	token, assistants := v.GetString("openai.token"), v.GetStringSlice("openai.assistants")
+	assistants := v.GetStringSlice("openai.assistants")
+	if len(assistants) == 0 {
+		return OpenAI{}, fmt.Errorf("openai.assistants must be specified")
+	}
+
+	token := v.GetString("openai.token")
 	if mode == Local {
-		if token != "" && len(assistants) > 0 {
+		if token != "" {
 			return OpenAI{
 				Token:      token,
 				Assistants: assistants,
@@ -141,17 +146,16 @@ func loadOpenAiInfo(v *viper.Viper, mode Mode) (OpenAI, error) {
 		return OpenAI{}, err
 	}
 
-	var openAICreds struct {
-		Token      string   `json:"token"`
-		Assistants []string `json:"assistants"`
+	var creds struct {
+		Token string `json:"token"`
 	}
 
-	if err := json.Unmarshal(data, &openAICreds); err != nil {
+	if err := json.Unmarshal(data, &creds); err != nil {
 		return OpenAI{}, err
 	}
 
 	return OpenAI{
-		Token:      token,
+		Token:      creds.Token,
 		Assistants: assistants,
 	}, nil
 }

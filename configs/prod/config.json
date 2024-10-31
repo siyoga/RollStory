@@ -1,0 +1,16 @@
+{
+  "mode": "prod",
+  "timeouts": {
+    "request": "20s"
+  },
+  "openai": {
+    "assistants": [
+      "asst_ndmEotM0OzgidIe2LOZUJk14"
+    ]
+  },
+  "apis": {
+    "telegram": "/bot_config/telegram.json",
+    "redis": "/bot_config/redis.json",
+    "openai": "/bot_config/openai.json"
+  }
+}
