@@ -91,13 +91,14 @@ func (r *router) requestWithMessageResponse(ctx context.Context, req domain.Requ
 	r.logRequest(req, res.error)
 
 	if res.error != nil {
-		fmt.Println("oshibka")
+		res.release = &req.From.Id
+		res.result.ChatId = req.ChatId
+
 		if r.debug {
-			res.result.Data = fmt.Sprintf("ERROR | Reason: %s, Details: %s", res.error.Reason, res.error.Details.Error())
+			res.result.Data = fmt.Sprintf("ERROR | Reason: %s, Details: %s\n", res.error.Reason, res.error.Details.Error())
 		} else {
 			// TODO: maybe send error in private message if bot in prod mode
 			res.result.Data = "Произошла ошибка. Попробуйте повторить запрос."
-			res.release = &req.From.Id
 		}
 	}
 
